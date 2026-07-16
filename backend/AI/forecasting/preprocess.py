@@ -4,12 +4,8 @@ import numpy as np
 
 def create_date_features(df):
     df["Date"] = pd.to_datetime(df["Date"])
-
+    
     df["year"] = df["Date"].dt.year
-
-    df["day_of_week"] = df["Date"].dt.dayofweek
-
-    df["day_of_year"] = df["Date"].dt.dayofyear
 
     df["day_sin"] = np.sin(
     2*np.pi*df["day_of_year"]/365)
@@ -45,28 +41,63 @@ def create_rolling_features(df):
     df["PM25_rolling_3"] = df["PM25"].rolling(3).mean()
     df["PM25_rolling_7"] = df["PM25"].rolling(7).mean()
     df["PM25_median_7"] = (df["PM25"].rolling(7).median())
-    df["PM25_median_7"] = (df["PM25"].rolling(7).std())
-    df["PM25_median_7"] = (df["PM25"].rolling(7).max())
+    df["PM25_std_7"] = (df["PM25"].rolling(7).std())
+    df["PM25_max_7"] = (df["PM25"].rolling(7).max())
     
 
     df["PM10_rolling_3"] = df["PM10"].rolling(3).mean()
     df["PM10_rolling_7"] = df["PM10"].rolling(7).mean()
     df["PM10_median_7"] = (df["PM10"].rolling(7).median())
-    df["PM10_median_7"] = (df["PM10"].rolling(7).max())
+    df["PM10_max_7"] = (df["PM10"].rolling(7).max())
 
     return df
 
+def get_season(month):
+
+    if month in [12,1,2]:
+        return "Winter"
+
+    elif month in [3,4,5]:
+        return "Summer"
+
+    elif month in [6,7,8,9]:
+        return "Monsoon"
+
+    else:
+        return "Autumn"
 
 def create_season_features(df):
-    pass
+    df["Season"] = df["month"].apply(get_season)
+
+    df = pd.get_dummies(
+        df,
+        columns=["Season"],
+        drop_first=True
+    )
+
+
+    expected = [
+        "Season_Monsoon",
+        "Season_Summer",
+        "Season_Winter"
+    ]
+
+    for col in expected:
+        if col not in df.columns:
+            df[col] = 0
+
+    return df
 
 
 def preprocess(df):
     df = df.copy()
 
     df = create_date_features(df)
+    df = create_season_features(df)
     df = create_lag_features(df)
     df = create_rolling_features(df)
-    df = create_season_features(df)
+
+    df = df.dropna().reset_index(drop=True)
+
 
     return df
