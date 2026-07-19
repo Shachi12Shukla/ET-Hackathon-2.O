@@ -3,8 +3,7 @@ import numpy as np
 
 
 def create_date_features(df):
-    df["Date"] = pd.to_datetime(df["Date"])
-    
+
     df["year"] = df["Date"].dt.year
 
     df["day_sin"] = np.sin(
