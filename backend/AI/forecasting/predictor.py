@@ -3,14 +3,15 @@ import pandas as pd
 import json
 from aqi import calculate_aqi, get_aqi_category
 
-pm25_model = joblib.load("../models/pm25_model.pkl")
-pm10_model = joblib.load("../models/pm10_model.pkl")
+pm25_model = joblib.load("../ml_pickle_files/pm25_model.pkl")
+pm10_model = joblib.load("../ml_pickle_files/pm10_model.pkl")
 
-feature_cols = joblib.load("../models/feature_list/feature_columns.pkl")
+feature_cols = joblib.load("../ml_pickle_files/feature_list/feature_columns.pkl")
 
 print("Models loaded successfully!")
 
-data = pd.read_csv("../../../datasets/final/Delhi_Mumbai_BLR_final_dataset.csv")
+data = pd.read_csv("../../../datasets/final/test_dataset.csv")
+print("dataset loaded succesfully!")
 
 # convert datetime
 data["Datetime"] = pd.to_datetime(data["Datetime"])
@@ -18,9 +19,11 @@ data["Datetime"] = pd.to_datetime(data["Datetime"])
 def predict(city):
     city_data = data[data["City"] == city].copy()
     city_data = city_data.sort_values("Datetime")
-    latest = city_data.iloc[-1:].copy()
+    city_data = data[data["City"] == city].copy()
 
-    X = latest.drop(
+    forecast_rows = city_data.head(24).copy()
+
+    X = forecast_rows.drop(
         columns=[
             "Datetime",
             "PM25",
@@ -41,25 +44,38 @@ def predict(city):
         fill_value=0
     )
 
-    pred_pm25 = pm25_model.predict(X)[0]
+    pred_pm25 = pm25_model.predict(X)
 
-    pred_pm10 = pm10_model.predict(X)[0]
+    pred_pm10 = pm10_model.predict(X)
 
-    aqi = calculate_aqi(
-        pred_pm25,
-        pred_pm10
-    )
+    forecast = []
 
-    category = get_aqi_category(aqi)
+    for i in range(len(forecast_rows)):
+
+        pm25 = float(pred_pm25[i])
+        pm10 = float(pred_pm10[i])
+
+        aqi = calculate_aqi(pm25, pm10)
+        category = get_aqi_category(aqi)
+
+        forecast.append({
+
+            "time": forecast_rows.iloc[i]["Datetime"].strftime("%H:%M"),
+
+            "pm25": round(pm25, 2),
+
+            "pm10": round(pm10, 2),
+
+            "aqi": int(aqi),
+
+            "category": category,
+
+        })
 
     return {
+
         "city": city,
 
-        "predicted_pm25": round(float(pred_pm25),2),
+        "forecast": forecast
 
-        "predicted_pm10": round(float(pred_pm10),2),
-
-        "aqi": int(aqi),
-
-        "category": category
     }

@@ -73,15 +73,15 @@ def get_aqi_category(aqi):
     else:
         return "Severe"
     
-# """
-# example for testing purpose.
-# """
-# pm25 = 82.5
-# pm10 = 146.3
+"""
+example for testing purpose.
+"""
+pm25 = 82.5
+pm10 = 146.3
 
-# aqi = calculate_aqi(pm25, pm10)
+aqi = calculate_aqi(pm25, pm10)
 
-# category = get_aqi_category(aqi)
+category = get_aqi_category(aqi)
 
-# print("AQI:", aqi)
-# print("Category:", category)
+print("AQI:", aqi)
+print("Category:", category)
