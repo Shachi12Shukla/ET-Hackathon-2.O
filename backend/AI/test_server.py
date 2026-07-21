@@ -1,6 +1,6 @@
-from predictor import predict, predict_wards
-from backend.AI.dispersion.dispersion_model import simulate_dispersion
-from backend.AI.attribution.attribution_engine import compute_source_attribution
+from forecasting.predictor import predict, predict_wards
+from dispersion.dispersion_model import simulate_dispersion
+from attribution.attribution_engine import compute_source_attribution
 import json
 
 print("=== TESTING FORECASTER ===")

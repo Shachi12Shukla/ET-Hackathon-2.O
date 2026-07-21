@@ -2,7 +2,10 @@ import joblib
 import pandas as pd
 import json
 import os
-from aqi import calculate_aqi, get_aqi_category
+try:
+  from aqi import calculate_aqi, get_aqi_category
+except ModuleNotFoundError:
+  from forecasting.aqi import calculate_aqi, get_aqi_category
 
 # Resolve paths relative to this file's location
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
