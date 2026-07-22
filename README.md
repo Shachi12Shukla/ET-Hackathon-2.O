@@ -36,3 +36,26 @@ An AI-powered, agentic dashboard built for city administrators and environmental
     Machine Learning: Python, XGBoost (for PM10/PM2.5 forecasting models)
     Agentic Workflows: Groq API (for ultra low latency memo generation and advisory translation)
     Geospatial Data: GeoJSON datasets mapping city infrastructure and pollution sources
+
+### Set up Instructions
+
+1. Clone the repository
+
+git clone https://github.com/Shachi12Shukla/ET-Hackathon-2.O.git
+cd ET-Hackathon-2.O
+
+2. Start the Backend Server 
+
+cd backend
+npm install
+npm start  # or node server.js
+
+3. Start the Frontend Environment
+
+Open a new terminal window then,
+
+cd frontend
+npm install
+npm run dev
+
+The frontend will be available at http://localhost:5173
