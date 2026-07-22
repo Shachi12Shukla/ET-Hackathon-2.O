@@ -1,1 +1,14 @@
 /node_modules
+
+/.venv
+node_modules
+
+.env
+
+__pycache__
+
+*.pyc
+
+datasets/
+
+AI/models/

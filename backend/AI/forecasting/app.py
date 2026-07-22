@@ -11,6 +11,7 @@ from predictor import predict, predict_wards
 from dispersion.dispersion_model import simulate_dispersion
 from attribution.attribution_engine import compute_source_attribution
 
+
 app = FastAPI(title="AuraScan AI ML Forecasting & Geospatial API")
 
 class DispersionRequest(BaseModel):

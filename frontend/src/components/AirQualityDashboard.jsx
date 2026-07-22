@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from "axios";
 import { 
   Activity, Map, AlertTriangle, Settings, Bell, 
   Wind, Thermometer, ShieldAlert, CheckCircle, Clock 
@@ -10,31 +11,115 @@ import {
 
 export default function AirQualityDashboard() {
   const [time, setTime] = useState(new Date());
-  const [language, setLanguage] = useState('en');
-  const [timeSlider, setTimeSlider] = useState(12);
-  const [compareCity, setCompareCity] = useState('Mumbai');
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+const [language, setLanguage] = useState("en");
+
+const [timeSlider, setTimeSlider] = useState(12);
+
+const [dashboardData, setDashboardData] = useState(null);
+
+const [loading, setLoading] = useState(true);
+
+const [selectedCity, setSelectedCity] = useState("Delhi");
+
+const [selectedWard, setSelectedWard] = useState(1);
+
+const [wards, setWards] = useState([]);
+
+const [error, setError] = useState(null);
+  const advisories = dashboardData?.advisory?.advisory
+    ? JSON.parse(dashboardData.advisory.advisory)
+    : null;
+  // Clock
+useEffect(() => {
+    const timer = setInterval(() => {
+        setTime(new Date());
+    }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+}, []);
 
-  const forecastData = [
-    { time: '00:00', pm25: 120, windSpeed: 12 },
-    { time: '04:00', pm25: 145, windSpeed: 8 },
-    { time: '08:00', pm25: 280, windSpeed: 5 }, // Stagnant wind, high pollution
-    { time: '12:00', pm25: 310, windSpeed: 4 },
-    { time: '16:00', pm25: 250, windSpeed: 15 },
-    { time: '20:00', pm25: 180, windSpeed: 18 },
-    { time: '24:00', pm25: 140, windSpeed: 14 },
-  ];
+const fetchWards = async () => {
 
-  const advisories = {
-    en: "CRITICAL: Forecasted PM10 surge in Ward 4. Municipal primary schools are advised to suspend outdoor physical education between 08:00 and 14:00.",
-    hi: "महत्वपूर्ण: वार्ड 4 में PM10 बढ़ने का अनुमान है। नगर निगम के प्राथमिक विद्यालयों को सुबह 08:00 से दोपहर 14:00 बजे तक बाहरी शारीरिक शिक्षा को निलंबित करने की सलाह दी जाती है।",
-    reg: "ಗಂಭೀರ: ವಾರ್ಡ್ 4 ರಲ್ಲಿ PM10 ಹೆಚ್ಚಳದ ಮುನ್ಸೂಚನೆ. ಪ್ರಾಥಮಿಕ ಶಾಲೆಗಳು ಬೆಳಿಗ್ಗೆ 08:00 ರಿಂದ ಮಧ್ಯಾಹ್ನ 14:00 ರವರೆಗೆ ಹೊರಾಂಗಣ ಆಟಗಳನ್ನು ನಿಲ್ಲಿಸಲು ಸೂಚಿಸಲಾಗಿದೆ."
-  };
+    try{
 
+        const response = await axios.get(
+
+            `http://localhost:5000/api/cities/${selectedCity}/wards`
+
+        );
+
+        setWards(response.data);
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+    }
+
+}
+useEffect(()=>{
+
+fetchWards();
+
+},[selectedCity]);
+// Dashboard Data
+const fetchDashboard = async () => {
+
+    try {
+
+        setLoading(true);
+
+        const response = await axios.post(
+            "http://localhost:5000/api/dashboard",
+            {
+                city: selectedCity,
+                ward: selectedWard
+            }
+        );
+
+        setDashboardData(response.data);
+
+    } catch (err) {
+
+        setError(err.message);
+
+    } finally {
+
+        setLoading(false);
+
+    }
+
+};
+useEffect(() => {
+
+    fetchDashboard();
+
+}, [selectedCity, selectedWard]);
+  
+
+  // useEffect(() => {
+  //   axios.get("http://localhost:5000/api/dashboard")
+  //       .then(res => {
+  //           setDashboardData(res.data.data);
+  //       });
+  // }, []);
+
+  if (loading) {
+
+    return (
+
+        <div className="h-screen flex items-center justify-center bg-slate-950 text-white">
+
+            Loading Dashboard...
+
+        </div>
+
+    );
+
+}
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
 
@@ -60,37 +145,36 @@ export default function AirQualityDashboard() {
           
           {/* Right Side: Control Matrix (Locked to prevent wrapping) */}
           <div className="flex items-center gap-2 lg:gap-4 shrink-0 flex-nowrap">
-            
-            {/* INTERACTIVE: Compact Multi-City Compare Dropdown */}
             <select 
-              value={compareCity}
-              onChange={(e) => setCompareCity(e.target.value)}
+              value={selectedCity}
+              onChange={(e)=>{setSelectedCity(e.target.value) ;
+                setSelectedWard("");}}
               className="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2 py-1.5 lg:px-3 lg:py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500 shadow-sm cursor-pointer hover:bg-slate-900 transition-colors"
             >
-              <option value="Mumbai">Delhi vs Mumbai</option>
-              <option value="Bengaluru">Delhi vs Bengaluru</option>
-              <option value="None">Delhi Core</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bengaluru">Bengaluru</option>
             </select>
 
             {/* DYNAMIC: COMPACT DUAL CITY STAT BLOCK */}
             <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg overflow-hidden text-xs">
               
-              <div className={`flex flex-col px-2.5 py-1 lg:px-4 lg:py-1.5 ${compareCity !== 'None' ? 'border-r border-slate-800' : ''} bg-amber-500/5`}>
-                <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-amber-500 font-bold">Delhi</span>
-                <span className="text-xs lg:text-sm font-bold text-amber-400">218</span>
+              <div className={`flex flex-col px-2.5 py-1 lg:px-4 lg:py-1.5 ${selectedCity !== 'None' ? 'border-r border-slate-800' : ''} bg-amber-500/5`}>
+                <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-amber-500 font-bold">{selectedCity}</span>
+                <span className="text-xs lg:text-sm font-bold text-amber-400">{dashboardData?.forecast?.forecast?.[0]?.pm25 ?? "--"}</span>
               </div>
 
-              {compareCity === 'Mumbai' && (
+              {selectedCity === 'Mumbai' && (
                 <div className="flex flex-col px-2.5 py-1 lg:px-4 lg:py-1.5 bg-emerald-500/5 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-emerald-500 font-bold">Mumbai</span>
-                  <span className="text-xs lg:text-sm font-bold text-emerald-400">92</span>
+                  <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-emerald-500 font-bold">{selectedCity}</span>
+                  <span className="text-xs lg:text-sm font-bold text-emerald-400">{dashboardData?.forecast?.forecast?.[0]?.pm25 ?? "--"}</span>
                 </div>
               )}
 
-              {compareCity === 'Bengaluru' && (
+              {selectedCity === 'Bengaluru' && (
                 <div className="flex flex-col px-2.5 py-1 lg:px-4 lg:py-1.5 bg-teal-500/5 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-teal-500 font-bold">Blr</span>
-                  <span className="text-xs lg:text-sm font-bold text-teal-400">115</span>
+                  <span className="text-[9px] lg:text-[10px] uppercase tracking-wider text-teal-500 font-bold">{selectedCity}</span>
+                  <span className="text-xs lg:text-sm font-bold text-teal-400">{dashboardData?.forecast?.forecast?.[0]?.pm25 ?? "--"}</span>
                 </div>
               )}
             </div>
@@ -118,11 +202,22 @@ export default function AirQualityDashboard() {
                 <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-100">
                   <Map size={18} className="text-teal-400" /> Hyperlocal 24-Hour Predictive Heatmap
                 </h2>
-                <select className="bg-slate-950 border border-slate-800 text-sm rounded-md px-3 py-1.5 text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                  <option>All Wards</option>
-                  <option>Ward 4 (Industrial)</option>
-                  <option>Ward 12 (Residential)</option>
-                </select>
+                <select className="bg-slate-950 border border-slate-800 text-sm rounded-md px-3 py-1.5 text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                value={selectedWard}
+                onChange={(e)=>setSelectedWard(e.target.value)}
+                >
+                  <option value="">Select Ward</option>
+                  {
+                  wards.map((ward,index)=>(
+                  <option
+                  key={ward.wardNo ?? index}
+                  value={ward.wardNo}
+                  >
+                    {ward.wardName}
+                  </option>
+                  ))
+                  }
+                  </select>
               </div>
 
               {/* Map Placeholder Wrapper */}
@@ -161,7 +256,7 @@ export default function AirQualityDashboard() {
               </h2>
               <div className="flex-1 w-full text-xs">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={dashboardData?.forecast?.forecast || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPm25" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
@@ -264,9 +359,42 @@ export default function AirQualityDashboard() {
                 <div className="flex items-center gap-2 text-red-400 text-sm font-bold mb-3">
                   <AlertTriangle size={16} /> TARGET: VULNERABLE POPULATION ZONES
                 </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                  {advisories[language]}
-                </p>
+                <div className="text-slate-300 text-sm leading-relaxed mb-4">
+
+    {advisories ? (
+
+        <>
+            <p><strong>Risk Level:</strong> {advisories.riskLevel}</p>
+
+            <p className="mt-2">
+                <strong>Health Advice:</strong><br />
+                {advisories.healthAdvice}
+            </p>
+
+            <p className="mt-2">
+                <strong>Outdoor Activity:</strong><br />
+                {advisories.outdoorActivity}
+            </p>
+
+            <p className="mt-2">
+                <strong>Sensitive Groups:</strong><br />
+                {advisories.sensitiveGroups}
+            </p>
+
+            <p className="mt-2">
+                <strong>Government Action:</strong><br />
+                {advisories.governmentAction}
+            </p>
+
+        </>
+
+    ) : (
+
+        "No Advisory Available"
+
+    )}
+
+</div>
                 <div className="pt-4 border-t border-slate-800 flex justify-between items-center">
                   <span className="text-xs text-slate-500 font-medium">Channel: Mobile Push, IVR, Digital Boards</span>
                   <button className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-bold py-1.5 px-4 rounded transition-colors flex items-center gap-1">
@@ -281,4 +409,14 @@ export default function AirQualityDashboard() {
       </main>
     </div>
   );
+// return (
+
+//         <div className="h-screen flex items-center justify-center bg-slate-950 text-white">
+
+//             Loading Dashboard...
+
+//         </div>
+
+//     );
+
 }

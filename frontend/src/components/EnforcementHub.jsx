@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import axios from 'axios';
 
 export default function EnforcementHub() {
+  const [tickets, setTickets] = useState([]);
+
+useEffect(() => {
+    axios.get("http://localhost:5000/api/enforcement")
+        .then(res => {
+            setTickets(res.data.data);
+        });
+}, []);
   return (
+    
     <div className="flex-1 bg-slate-950 text-slate-100 p-8 overflow-y-auto h-screen">
       
       <header className="mb-8">

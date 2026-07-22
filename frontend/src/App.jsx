@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Activity, Map, ShieldAlert, Settings, PanelLeftClose, PanelLeft } from 'lucide-react';
-import AirQualityDashboard from './AirQualityDashboard';
-import SettingsView from './Settings';
-import EnforcementMap from './EnforcementMap';
-import EnforcementHub from './EnforcementHub';
+import AirQualityDashboard from './components/AirQualityDashboard';
+import SettingsView from './components/Settings';
+import EnforcementMap from './components/EnforcementMap';
+import EnforcementHub from './components/EnforcementHub';
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState('dashboard');
