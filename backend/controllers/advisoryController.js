@@ -1,4 +1,4 @@
-const service = require("../services/advisoryService");
+const service = require("../services/advisoryService2");
 
 exports.generate = async(req,res)=>{
 
